@@ -11,7 +11,18 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 }
 
-const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig)
+// Only initialize the Firebase client in a browser environment.
+// This prevents server-side builds (prerender) from attempting to
+// initialize the client SDK with client-only API keys and throwing
+// an `auth/invalid-api-key` error during the build.
+let app: any = null
+let auth: any = null
+let db: any = null
 
-export const auth = getAuth(app)
-export const db = getFirestore(app)
+if (typeof window !== 'undefined') {
+  app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig)
+  auth = getAuth(app)
+  db = getFirestore(app)
+}
+
+export { auth, db }

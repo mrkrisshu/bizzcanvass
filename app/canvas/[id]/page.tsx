@@ -12,6 +12,8 @@ import html2canvas from 'html2canvas'
 import jsPDF from 'jspdf'
 import ExcelJS from 'exceljs'
 
+export const dynamic = 'force-dynamic'
+
 export default function CanvasPage() {
   const router = useRouter()
   const params = useParams()
