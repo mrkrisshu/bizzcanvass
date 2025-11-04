@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
-import { createClient } from '@supabase/supabase-js'
+import { adminDb } from '@/lib/firebaseAdmin'
 
 // POST /api/checkout/verify
 // Body: { session_id: string }
@@ -30,21 +30,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ verified: false, reason: 'Session not paid' }, { status: 200 })
     }
 
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-      process.env.SUPABASE_SERVICE_ROLE_KEY || ''
-    )
-
     const email = (session.customer_details && session.customer_details.email) || session.customer_email || 'unknown@user.local'
     const userId = session.client_reference_id
 
-    const { error: upsertError } = await supabase
-      .from('users')
-      .upsert({ id: userId, email, subscription_status: 'premium' }, { onConflict: 'id' })
-      .eq('id', userId)
-
-    if (upsertError) {
-      console.error('Verify: upsert error', upsertError)
+    try {
+      await adminDb.collection('users').doc(userId).set(
+        { id: userId, email, subscription_status: 'premium' },
+        { merge: true }
+      )
+    } catch (err) {
+      console.error('Verify: Firestore update error', err)
       return NextResponse.json({ error: 'Failed to upgrade user' }, { status: 500 })
     }
 

@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { supabase } from '@/lib/supabase'
+import { auth, db } from '@/lib/firebaseClient'
+import { onAuthStateChanged, signOut } from 'firebase/auth'
+import { collection, doc, getDoc, setDoc, query, where, orderBy, getDocs } from 'firebase/firestore'
 import { CanvasCard } from '@/components/CanvasCard'
 import { UpgradeModal } from '@/components/UpgradeModal'
 import { Button } from '@/components/ui/button'
@@ -26,7 +28,39 @@ export default function Dashboard() {
   const searchParams = useSearchParams()
 
   useEffect(() => {
-    checkUser()
+    const unsub = onAuthStateChanged(auth, async (u) => {
+      if (!u) {
+        router.push('/auth/signin')
+        return
+      }
+      // Set immediate fallback so UI renders even if Firestore stream fails
+      setUser(u)
+      setUserData((prev: any) =>
+        prev ?? {
+          id: u.uid,
+          email: u.email || 'unknown@user.local',
+          subscription_status: 'free',
+          generation_count: 0,
+          created_at: new Date().toISOString(),
+        }
+      )
+      // Fetch real data in background
+      ;(async () => {
+        try {
+          await fetchUserData(u.uid, u.email || null)
+        } catch (e) {
+          console.error('Error fetching/creating user data:', e)
+        }
+      })()
+      ;(async () => {
+        try {
+          await fetchCanvases(u.uid)
+        } catch (e) {
+          console.error('Error fetching canvases:', e)
+        }
+      })()
+    })
+    return () => unsub()
   }, [])
 
   // After returning from Stripe success, verify session and refresh user
@@ -43,8 +77,8 @@ export default function Dashboard() {
           })
           // Regardless of result, refresh user data shortly after to capture webhook/verify
           setTimeout(() => {
-            if (user?.id) {
-              fetchUserData(user.id)
+            if (user?.uid) {
+              fetchUserData(user.uid, user.email || null)
             }
           }, 1000)
         } catch (e) {
@@ -54,48 +88,53 @@ export default function Dashboard() {
     }
   }, [searchParams, user])
 
-  const checkUser = async () => {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
+  // Superseded by onAuthStateChanged
 
-    if (!session) {
-      router.push('/auth/signin')
-      return
-    }
-
-    setUser(session.user)
-    await fetchUserData(session.user.id)
-    await fetchCanvases(session.user.id)
-  }
-
-  const fetchUserData = async (userId: string) => {
-    const { data, error } = await supabase.from('users').select('*').eq('id', userId).single()
-
-    if (error) {
-      console.error('Error fetching user data:', error)
-      // If user doesn't exist in database, create default user data
+  const fetchUserData = async (userId: string, email: string | null) => {
+    try {
+      const userRef = doc(db, 'users', userId)
+      const snap = await getDoc(userRef)
+      if (!snap.exists()) {
+        const defaultData = {
+          id: userId,
+          email: email || 'unknown@user.local',
+          subscription_status: 'free',
+          generation_count: 0,
+          created_at: new Date().toISOString(),
+        }
+        await setDoc(userRef, defaultData)
+        setUserData(defaultData)
+      } else {
+        setUserData(snap.data())
+      }
+    } catch (e) {
+      console.error('Firestore user data error:', e)
+      // Fallback to default data so the dashboard can render
       setUserData({
         id: userId,
+        email: email || 'unknown@user.local',
         subscription_status: 'free',
-        generation_count: 0
+        generation_count: 0,
+        created_at: new Date().toISOString(),
       })
-    } else {
-      setUserData(data)
     }
   }
 
   const fetchCanvases = async (userId: string) => {
-    const { data, error } = await supabase
-      .from('canvases')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-
-    if (error) {
-      console.error('Error fetching canvases:', error)
-    } else {
-      setCanvases(data || [])
+    try {
+      const canvasesRef = collection(db, 'canvases')
+      // Avoid composite index requirement by sorting client-side
+      const q = query(canvasesRef, where('user_id', '==', userId))
+      const snaps = await getDocs(q)
+      const list = snaps.docs.map((d) => ({ id: d.id, ...d.data() })) as any[]
+      const sorted = list.sort((a: any, b: any) => 
+        String(b.created_at || '').localeCompare(String(a.created_at || ''))
+      )
+      setCanvases(sorted)
+    } catch (e) {
+      console.error('Firestore canvases fetch error:', e)
+      // Safe fallback
+      setCanvases([])
     }
   }
 
@@ -104,19 +143,19 @@ export default function Dashboard() {
 
     try {
       // Get the session token
-      const { data: { session } } = await supabase.auth.getSession()
-      
-      if (!session) {
+      const current = auth.currentUser
+      if (!current) {
         alert('Please sign in again')
         router.push('/auth/signin')
         return
       }
+      const token = await current.getIdToken()
 
       const response = await fetch('/api/generate', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ 
           businessIdea, 
@@ -149,7 +188,7 @@ export default function Dashboard() {
   }
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut()
+    await signOut(auth)
     router.push('/')
   }
 
@@ -165,7 +204,7 @@ export default function Dashboard() {
     <div className="min-h-screen bg-black text-white">
       {/* Header */}
       <header className="bg-black sticky top-0 z-40">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-2">
             <div className="size-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
               <Sparkles className="size-4 text-blue-400" />
@@ -173,7 +212,7 @@ export default function Dashboard() {
             <span className="text-xl font-bold">BizCanvas</span>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
             <div className="text-sm">
               <span className="text-gray-400">Plan:</span>{' '}
               <span className={userData.subscription_status === 'premium' ? 'text-yellow-400 font-semibold' : 'text-gray-300'}>
@@ -218,8 +257,8 @@ export default function Dashboard() {
       <main className="w-full">
         {/* AI Chat Interface - Full Screen */}
         <div>
-          <RuixenMoonChat 
-            userName={user.user_metadata?.full_name || user.email?.split('@')[0]}
+            <RuixenMoonChat 
+            userName={(user.displayName || (user.email ? user.email.split('@')[0] : 'User'))}
             onSubmit={handleGenerate}
           />
         </div>

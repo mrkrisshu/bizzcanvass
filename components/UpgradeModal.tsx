@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { X } from 'lucide-react'
-import { supabase } from '@/lib/supabase'
+import { auth } from '@/lib/firebaseClient'
 
 interface UpgradeModalProps {
   isOpen: boolean
@@ -18,19 +18,19 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
   const handleUpgrade = async () => {
     setLoading(true)
     try {
-      // Get session token
-      const { data: { session } } = await supabase.auth.getSession()
-      
-      if (!session) {
-        console.error('No session found')
+      // Get Firebase ID token
+      const user = auth.currentUser
+      if (!user) {
+        console.error('No authenticated user')
         setLoading(false)
         return
       }
+      const token = await user.getIdToken()
 
       const response = await fetch('/api/checkout', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${session.access_token}`,
+          'Authorization': `Bearer ${token}`,
         },
       })
 

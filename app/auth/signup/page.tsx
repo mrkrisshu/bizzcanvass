@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabase'
+import { auth } from '@/lib/firebaseClient'
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth'
 import { AnimatedAuth } from '@/components/ui/animated-auth'
 
 export const dynamic = 'force-dynamic'
@@ -17,22 +18,12 @@ export default function SignUp() {
     setError('')
 
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: name
-          }
-        }
-      })
-
-      if (error) throw error
-
-      if (data.user) {
-        // Force a full page refresh to update middleware
-        window.location.href = '/dashboard'
+      const userCred = await createUserWithEmailAndPassword(auth, email, password)
+      if (name) {
+        await updateProfile(userCred.user, { displayName: name })
       }
+      // Navigate to dashboard
+      window.location.href = '/dashboard'
     } catch (error: any) {
       setError(error.message || 'An error occurred during sign up')
     } finally {

@@ -40,13 +40,13 @@ export function CanvasGrid({ canvasData, canvasId, onSave }: CanvasGridProps) {
     dataKey: keyof BusinessModelCanvas
     color: string 
   }) => (
-    <div className={`bg-gradient-to-br ${color} border-2 border-gray-700 rounded-lg p-4 h-full flex flex-col`}>
+    <div className={`bg-gradient-to-br ${color} border-2 border-gray-700 rounded-lg p-3 sm:p-4 h-full flex flex-col`}>
       <h3 className="text-base font-bold text-white mb-2 border-b border-gray-600 pb-2">{title}</h3>
       <div className="flex-1">
-        <ul className="space-y-1.5 text-xs text-gray-200">
+        <ul className="space-y-1.5 text-sm sm:text-xs text-gray-200">
           {data[dataKey].map((item: string, idx: number) => (
-            <li key={idx} className="flex items-start gap-1.5">
-              <span className="text-blue-400 mt-0.5 flex-shrink-0 text-xs">•</span>
+            <li key={idx} className="flex items-start gap-2 sm:gap-1.5">
+              <span className="text-blue-400 mt-0.5 flex-shrink-0 text-sm sm:text-xs">•</span>
               <span className="flex-1 break-words leading-tight">{item}</span>
             </li>
           ))}
@@ -57,10 +57,10 @@ export function CanvasGrid({ canvasData, canvasId, onSave }: CanvasGridProps) {
 
   return (
     <div className="w-full space-y-6">
-      {/* Top Row - 5 columns in one grid */}
-      <div className="grid grid-cols-5 gap-6">
+      {/* Top Row - responsive grid: stack on mobile */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-6">
         {/* Column 1: Key Partners - Full Height */}
-        <div className="min-h-[500px]">
+        <div className="min-h-[320px] sm:min-h-[500px]">
           <Section 
             title="Key Partners" 
             dataKey="key_partners" 
@@ -69,15 +69,15 @@ export function CanvasGrid({ canvasData, canvasId, onSave }: CanvasGridProps) {
         </div>
         
         {/* Column 2: Key Activities & Key Resources - Stacked */}
-        <div className="flex flex-col gap-6 min-h-[500px]">
-          <div className="flex-1 min-h-[240px]">
+        <div className="flex flex-col gap-3 sm:gap-6 min-h-[320px] sm:min-h-[500px]">
+          <div className="flex-1 min-h-[160px] sm:min-h-[240px]">
             <Section 
               title="Key Activities" 
               dataKey="key_activities" 
               color="from-pink-700/50 to-rose-700/50" 
             />
           </div>
-          <div className="flex-1 min-h-[240px]">
+          <div className="flex-1 min-h-[160px] sm:min-h-[240px]">
             <Section 
               title="Key Resources" 
               dataKey="key_resources" 
@@ -87,7 +87,7 @@ export function CanvasGrid({ canvasData, canvasId, onSave }: CanvasGridProps) {
         </div>
         
         {/* Column 3: Value Propositions - Full Height */}
-        <div className="min-h-[500px]">
+        <div className="min-h-[320px] sm:min-h-[500px]">
           <Section 
             title="Value Propositions" 
             dataKey="value_propositions" 
@@ -96,15 +96,15 @@ export function CanvasGrid({ canvasData, canvasId, onSave }: CanvasGridProps) {
         </div>
         
         {/* Column 4: Customer Relationships & Channels - Stacked */}
-        <div className="flex flex-col gap-6 min-h-[500px]">
-          <div className="flex-1 min-h-[240px]">
+        <div className="flex flex-col gap-3 sm:gap-6 min-h-[320px] sm:min-h-[500px]">
+          <div className="flex-1 min-h-[160px] sm:min-h-[240px]">
             <Section 
               title="Customer Relationships" 
               dataKey="customer_relationships" 
               color="from-indigo-700/50 to-blue-700/50" 
             />
           </div>
-          <div className="flex-1 min-h-[240px]">
+          <div className="flex-1 min-h-[160px] sm:min-h-[240px]">
             <Section 
               title="Channels" 
               dataKey="channels" 
@@ -114,7 +114,7 @@ export function CanvasGrid({ canvasData, canvasId, onSave }: CanvasGridProps) {
         </div>
         
         {/* Column 5: Customer Segments - Full Height */}
-        <div className="min-h-[500px]">
+        <div className="min-h-[320px] sm:min-h-[500px]">
           <Section 
             title="Customer Segments" 
             dataKey="customer_segments" 
@@ -123,10 +123,10 @@ export function CanvasGrid({ canvasData, canvasId, onSave }: CanvasGridProps) {
         </div>
       </div>
       
-      {/* Bottom Row - 2 columns COMPLETELY SEPARATE */}
-      <div className="grid grid-cols-2 gap-6">
+      {/* Bottom Row - responsive: single column on mobile */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
         {/* Cost Structure */}
-        <div className="min-h-[280px]">
+        <div className="min-h-[200px] sm:min-h-[280px]">
           <Section 
             title="Cost Structure" 
             dataKey="cost_structure" 
@@ -135,7 +135,7 @@ export function CanvasGrid({ canvasData, canvasId, onSave }: CanvasGridProps) {
         </div>
         
         {/* Revenue Streams */}
-        <div className="min-h-[280px]">
+        <div className="min-h-[200px] sm:min-h-[280px]">
           <Section 
             title="Revenue Streams" 
             dataKey="revenue_streams" 

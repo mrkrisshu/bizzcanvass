@@ -639,9 +639,9 @@ function LoginPage() {
 
           {/* Sign Up Link */}
           <div className="text-center text-sm text-muted-foreground mt-8">
-            Don&apos;t have an account?{" "}
+            Don't have an account?{" "}
             <a href="#" className="text-foreground font-medium hover:underline">
-              Sign Up
+              Sign up
             </a>
           </div>
         </div>

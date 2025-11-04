@@ -128,14 +128,15 @@ Vercel will automatically build and deploy!
 ## 🎯 Production Checklist
 
 - [ ] Environment variables set in Vercel
-- [ ] Supabase URLs updated for production
-- [ ] Test sign up flow
-- [ ] Test sign in flow
-- [ ] Test dashboard access
+- [ ] Firebase client config set (NEXT_PUBLIC_FIREBASE_*)
+- [ ] Firebase Admin secrets set (FIREBASE_ADMIN_*), if using Admin SDK
+- [ ] Stripe keys and webhook secret set
+- [ ] Test sign up flow (Firebase Auth)
+- [ ] Test sign in flow (Firebase Auth)
+- [ ] Test dashboard access (protected routes)
 - [ ] Test sign out
 - [ ] Check mobile responsiveness
-- [ ] Verify email confirmations work
-- [ ] Test protected routes
+- [ ] Verify protected routes and auth redirects
 
 ## 🚀 You're Live!
 
@@ -154,4 +155,4 @@ Next steps:
 **Need help?** Check:
 - [Vercel Documentation](https://vercel.com/docs)
 - [Next.js Deployment](https://nextjs.org/docs/deployment)
-- [Supabase Production Checklist](https://supabase.com/docs/guides/platform/going-into-prod)
+- [Firebase Production Guide](https://firebase.google.com/docs)

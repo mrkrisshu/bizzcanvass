@@ -2,7 +2,7 @@
 
 **BizCanvas** is a free AI-powered web application for generating Business Model Canvases.
 
-Built with Next.js 14, TypeScript, TailwindCSS, and Supabase.
+Built with Next.js 14, TypeScript, TailwindCSS, Firebase, and Stripe.
 
 ---
 
@@ -16,7 +16,7 @@ npm install
 
 # 2. Set up environment
 Copy-Item .env.local.example .env.local
-# Edit .env.local with your Supabase credentials
+# Edit .env.local with your Firebase + Stripe credentials
 
 # 3. Run development server
 npm run dev
@@ -30,18 +30,8 @@ npm run dev
 
 | Document | Purpose |
 |----------|---------|
-| **[START_HERE.md](./START_HERE.md)** ⭐ | **Read this first!** Entry point to all documentation |
-| [QUICK_REFERENCE.md](./QUICK_REFERENCE.md) | One-page cheat sheet |
-| [QUICKSTART.md](./QUICKSTART.md) | 5-minute setup guide |
-| [CHECKLIST.md](./CHECKLIST.md) | Step-by-step setup checklist |
-| [SETUP.md](./SETUP.md) | Detailed setup instructions |
-| [COMPLETE.md](./COMPLETE.md) | Complete feature overview |
-| [STRUCTURE.md](./STRUCTURE.md) | Folder structure guide |
-| [VISUAL_GUIDE.md](./VISUAL_GUIDE.md) | Visual layouts & diagrams |
 | [SCRIPTS.md](./SCRIPTS.md) | npm commands reference |
 | [DEPLOYMENT.md](./DEPLOYMENT.md) | Deploy to Vercel |
-| [NOTES.md](./NOTES.md) | Development notes |
-| [INDEX.md](./INDEX.md) | Complete documentation index |
 | [PROJECT_SUMMARY.md](./PROJECT_SUMMARY.md) | Full project summary |
 
 ---
@@ -53,7 +43,7 @@ npm run dev
 | **Next.js** | 14.0.4 | React framework with App Router |
 | **TypeScript** | 5.x | Type safety |
 | **TailwindCSS** | 3.3.0 | Styling framework |
-| **Supabase** | 2.39.0 | Authentication & database |
+| **Firebase** | 12.x | Authentication & database |
 | **Vercel** | - | Hosting (ready to deploy) |
 
 ---
@@ -108,12 +98,12 @@ bizcanvas/
 
 ### Prerequisites
 - Node.js 18+
-- Supabase account ([Sign up free](https://supabase.com))
+- Firebase project (Web App)
 
 ### Setup Steps
 1. **Install:** `npm install`
 2. **Configure:** Copy `.env.local.example` to `.env.local`
-3. **Supabase:** Add your credentials to `.env.local`
+3. **Firebase & Stripe:** Add your credentials to `.env.local`
 4. **Run:** `npm run dev`
 5. **Visit:** [http://localhost:3000](http://localhost:3000)
 
@@ -141,7 +131,7 @@ git push
 ## 📖 Learn More
 
 - [Next.js Documentation](https://nextjs.org/docs)
-- [Supabase Documentation](https://supabase.com/docs)
+- [Firebase Documentation](https://firebase.google.com/docs)
 - [TailwindCSS Documentation](https://tailwindcss.com/docs)
 
 ---
@@ -158,6 +148,6 @@ MIT
 
 ---
 
-**Built with ❤️ using Next.js, TypeScript, TailwindCSS, and Supabase**
+**Built with ❤️ using Next.js, TypeScript, TailwindCSS, Firebase, and Stripe**
 
-**Ready to build?** → [START_HERE.md](./START_HERE.md) 🚀
+**Ready to build?** → Start by running `npm install` and `npm run dev` 🚀

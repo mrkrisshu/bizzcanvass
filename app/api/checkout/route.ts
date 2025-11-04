@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
 import Stripe from 'stripe'
+import { adminAuth } from '@/lib/firebaseAdmin'
 
 export async function POST(req: NextRequest) {
   try {
@@ -11,31 +11,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized - No auth header' }, { status: 401 })
     }
 
-    // Initialize Stripe (use account default API version)
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '')
-
-    // Create Supabase client with authorization header
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
-      {
-        global: {
-          headers: {
-            Authorization: authHeader,
-          },
-        },
-      }
-    )
-
-    // Check authentication
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser()
-
-    if (authError || !user) {
+    // Verify Firebase ID token
+    const token = authHeader.replace(/^Bearer\s+/i, '')
+    let decoded
+    try {
+      decoded = await adminAuth.verifyIdToken(token)
+    } catch (e) {
       return NextResponse.json({ error: 'Unauthorized - Invalid token' }, { status: 401 })
     }
+
+    // Initialize Stripe (use account default API version)
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '')
 
     // Create Stripe Checkout Session
     const checkoutSession = await stripe.checkout.sessions.create({
@@ -50,8 +36,8 @@ export async function POST(req: NextRequest) {
       // Include session id in success URL so we can verify if webhook is delayed
       success_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/dashboard?upgrade=success&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/dashboard?upgrade=cancelled`,
-      client_reference_id: user.id,
-      customer_email: user.email,
+      client_reference_id: decoded.uid,
+      customer_email: decoded.email || undefined,
     })
 
     return NextResponse.json({ url: checkoutSession.url })

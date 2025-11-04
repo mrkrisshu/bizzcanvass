@@ -1,15 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
 import Stripe from 'stripe'
+import { adminDb } from '@/lib/firebaseAdmin'
 
 export async function POST(req: NextRequest) {
   // Initialize Stripe (use account default API version)
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '')
-
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-    process.env.SUPABASE_SERVICE_ROLE_KEY || ''
-  )
 
   const body = await req.text()
   const signature = req.headers.get('stripe-signature')!
@@ -38,25 +33,22 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No user ID' }, { status: 400 })
     }
 
-    // Ensure a user row exists and set subscription to premium
-    const email = (session.customer_details && session.customer_details.email) || session.customer_email || null
-
-    const { error: upsertError } = await supabase
-      .from('users')
-      .upsert(
+    // Ensure a user doc exists and set subscription to premium in Firestore
+    const email = (session.customer_details && session.customer_details.email) || session.customer_email || undefined
+    const userRef = adminDb.collection('users').doc(userId)
+    try {
+      await userRef.set(
         {
           id: userId,
           email: email || 'unknown@user.local',
           subscription_status: 'premium',
         },
-        { onConflict: 'id' }
+        { merge: true }
       )
-      .eq('id', userId)
-
-    if (upsertError) {
-      console.error('Error upserting user subscription:', upsertError)
+    } catch (err) {
+      console.error('Error updating user subscription in Firestore:', err)
       return NextResponse.json(
-        { error: 'Failed to upsert subscription' },
+        { error: 'Failed to update subscription' },
         { status: 500 }
       )
     }
